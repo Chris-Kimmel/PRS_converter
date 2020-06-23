@@ -37,20 +37,24 @@ if not os.path.exists(args.READPATH):
 if not os.access(args.READPATH, os.R_OK):
     print('Error: The file {} is not readable with your permissions.'.format(args.READPATH))
     sys.exit()
-if not os.access(args.WRITEPATH, os.R_OK):
-    print('Error: The file {} is not readable with your permissions.'.format(args.WRITEPATH))
-    sys.exit()
-if not os.access(args.WRITEPATH, os.W_OK):
-    print('Error: The file {} is not writable with your permissions.'.format(args.WRITEPATH))
-    sys.exit()
 if os.path.exists(args.WRITEPATH):
+    if not os.access(args.WRITEPATH, os.R_OK):
+        print('Error: The file {} is not readable with your permissions.'.format(args.WRITEPATH))
+        sys.exit()
+    sys.exit()
     if not args.overwrite:
         errstring = 'Error: This program will not overwrite files unless the command-line argument --overwrite is used. There is already a file at {}'.format(args.WRITEPATH)
         print(errstring)
         sys.exit()
-    elif args.overwrite:
+    if not os.access(args.WRITEPATH, os.W_OK):
+        print('Error: The file {} is not writable with your permissions.'.format(args.WRITEPATH))
+    if args.overwrite:
         print('Deleting file {}...'.format(args.WRITEPATH))
         os.remove(args.WRITEPATH)
+else:
+    dirpath = os.path.split(arbs.WRITEPATH)[0]
+    if not os.access(dirpath, os.W_OK):
+        print('Error: Cannot create files in directory {} with your permissions.'.format(dirpath))
 
 # TODO: Assert we have write permissions and read permissions
 
