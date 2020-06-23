@@ -62,16 +62,17 @@ bs_rec_array = np.rec.array(bs_struct_array)
 ### Calculate some basic data ###
 
 pos_array = bs_rec_array['pos']
+ri_array = bs_rec_array['read_id']
+
 pos_set = set(pos_array)
 num_poss = len(pos_set)
-pos_list = sorted(list(pos_set))
-# TODO: Iterate through min_pos, num_poss, num_reads and ensure I didn't assume things were intervals
-#min_pos = min(pos_set)
+pos_tuple = sorted(tuple(pos_set))
+pos_to_index = {pos: index for index, pos in enumerate(pos_tuple)}
 
-ri_array = bs_rec_array['read_id']
 ri_set = set(ri_array)
-ri_list = sorted(list(ri_set))
 num_reads = len(ri_set)
+ri_tuple = sorted(tuple(ri_set))
+ri_to_index = {read_id: index for index, read_id in enumerate(ri_tuple)}
 
 ### Process the data into table form ###
 
@@ -85,8 +86,12 @@ bs_rec_array_sorted.sort(order=['read_id','pos'], kind='mergesort')
 table = np.full((num_reads, num_poss), np.nan, np.dtype('f8'), order='C') # Interestingly, order='F' doesn't seem slower
 
 # On a 28-core CPU in the Owens cluster this loop took a little over 3 minutes on a rec_array with 28 million entries:
-for pos, stat, read in bs_rec_array_sorted:
-    table[ri_list.index(read), pos_list.index(pos)] = stat
+num_checkpoints = 20
+checkpoint_size = len(bs_rec_array_sorted)//num_checkpoints
+for i, (pos, stat, read_id) in enumerate(bs_rec_array_sorted):
+    table[ri_to_index(read_id), pos_to_index(pos)] = stat
+    if i % checkpoint_size == 0:
+	print('Progress: {}/{}'.format(i//checkpoint_size, num_checkpoints))
 
 ### Write data ###
 
@@ -94,16 +99,14 @@ print('Writing data to CSV file...')
 
 assert len(table) > 0, 'Trying to write a table with no entries'
 
-row_labels = np.asarray(ri_list).reshape(-1,1)
-
 with open(args.WRITEPATH, 'wb') as fh:
     
-    header_entries = map(str, ['read_id'] + ri_list)
+    header_entries = map(str, ['read_id'] + ri_tuple)
     header = ','.join(header_entries) + '\n'
     fh.write(header)
     
     for i, row in enumerate(table):
-        row_entries = map(str, [i] + list(row))
+        row_entries = map(str, [ri_tuple[i]] + list(row))
         row = ','.join(row_entries)+'\n'
         fh.write(row)
 
