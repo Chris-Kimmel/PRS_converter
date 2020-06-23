@@ -35,12 +35,14 @@ if not os.path.exists(args.READPATH):
     print('Error: The file {} does not exist.'.format(args.READPATH))
 if os.path.exists(args.WRITEPATH) and not args.overwrite:
     errstring = 'Error: This program will not overwrite files unless the command-line argument --overwrite is used. There is already a file at {}'.format(args.WRITEPATH)
-    print('errstring')
+    print(errstring)
     sys.exit()
 
 # TODO: Assert we have write permissions and read permissions
 
 ### Reading the HDF5 file ###
+
+print('Reading {}...'.format(args.READPATH))
 
 prs_path = args.READPATH
 
@@ -62,16 +64,18 @@ bs_rec_array = np.rec.array(bs_struct_array)
 pos_array = bs_rec_array['pos']
 pos_set = set(pos_array)
 num_poss = len(pos_set)
-pos_list = list(pos_set).sort()
+pos_list = sorted(list(pos_set))
 # TODO: Iterate through min_pos, num_poss, num_reads and ensure I didn't assume things were intervals
 #min_pos = min(pos_set)
 
 ri_array = bs_rec_array['read_id']
 ri_set = set(ri_array)
-ri_list = list(ri_set).sort()
+ri_list = sorted(list(ri_set))
 num_reads = len(ri_set)
 
 ### Process the data into table form ###
+
+print('Converting per-read statistics data into a table... (This is the slow step.)')
 
 # Sort bs_rec_array. Maybe try sorting primarily by 'pos'. That might help us fill the table faster below.
 # This step took me 20 seconds on a bs_rec_array with 28 million entries (Owens cluster, 1 node, 28 cores)
@@ -85,6 +89,8 @@ for pos, stat, read in bs_rec_array_sorted:
     table[ri_list.index(read), pos_list.index(pos)] = stat
 
 ### Write data ###
+
+print('Writing data to CSV file...')
 
 assert len(table) > 0, 'Trying to write a table with no entries'
 
