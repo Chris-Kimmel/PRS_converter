@@ -33,10 +33,24 @@ if args.overwrite: print('This script will overwrite the CSV file at {} if it al
 
 if not os.path.exists(args.READPATH):
     print('Error: The file {} does not exist.'.format(args.READPATH))
-if os.path.exists(args.WRITEPATH) and not args.overwrite:
-    errstring = 'Error: This program will not overwrite files unless the command-line argument --overwrite is used. There is already a file at {}'.format(args.WRITEPATH)
-    print(errstring)
     sys.exit()
+if not os.access(args.READPATH, os.R_OK):
+    print('Error: The file {} is not readable with your permissions.'.format(args.READPATH))
+    sys.exit()
+if not os.access(args.WRITEPATH, os.R_OK):
+    print('Error: The file {} is not readable with your permissions.'.format(args.WRITEPATH))
+    sys.exit()
+if not os.access(args.WRITEPATH, os.W_OK):
+    print('Error: The file {} is not writable with your permissions.'.format(args.WRITEPATH))
+    sys.exit()
+if os.path.exists(args.WRITEPATH):
+    if not args.overwrite:
+        errstring = 'Error: This program will not overwrite files unless the command-line argument --overwrite is used. There is already a file at {}'.format(args.WRITEPATH)
+        print(errstring)
+        sys.exit()
+    elif args.overwrite:
+        print('Deleting file {}...'.format(args.WRITEPATH))
+        os.remove(args.WRITEPATH)
 
 # TODO: Assert we have write permissions and read permissions
 
@@ -89,9 +103,9 @@ table = np.full((num_reads, num_poss), np.nan, np.dtype('f8'), order='C') # Inte
 num_checkpoints = 20
 checkpoint_size = len(bs_rec_array_sorted)//num_checkpoints
 for i, (pos, stat, read_id) in enumerate(bs_rec_array_sorted):
-    table[ri_to_index(read_id), pos_to_index(pos)] = stat
+    table[ri_to_index[read_id], pos_to_index[pos]] = stat
     if i % checkpoint_size == 0:
-	print('Progress: {}/{}'.format(i//checkpoint_size, num_checkpoints))
+        print('Progress: {}/{}'.format(i//checkpoint_size, num_checkpoints))
 
 ### Write data ###
 
@@ -101,7 +115,7 @@ assert len(table) > 0, 'Trying to write a table with no entries'
 
 with open(args.WRITEPATH, 'wb') as fh:
     
-    header_entries = map(str, ['read_id'] + ri_tuple)
+    header_entries = map(str, ['read_id'] + pos_tuple)
     header = ','.join(header_entries) + '\n'
     fh.write(header)
     
