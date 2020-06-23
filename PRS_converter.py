@@ -52,7 +52,7 @@ if os.path.exists(args.WRITEPATH):
         print('Deleting file {}...'.format(args.WRITEPATH))
         os.remove(args.WRITEPATH)
 else:
-    dirpath = os.path.split(arbs.WRITEPATH)[0]
+    dirpath = os.path.split(args.WRITEPATH)[0]
     if not os.access(dirpath, os.W_OK):
         print('Error: Cannot create files in directory {} with your permissions.'.format(dirpath))
 
