@@ -26,3 +26,4 @@ at your terminal.
 * This script was inadequately tested. Be careful.
 * Per-read statistics files are produced by Tombo's `tombo detect_modifications` command. If `tombo detect_modifications` is fed the `--processes` or `--multiprocess-region-size` options then *this script will not work right*: it will only produce a CSV file containing per-read statistics for part of your genome.
 * The output CSV will generally be smaller than the per-read statistics file, because the per-read statistics file stores data in a very inefficient way.
+* Ignore the Jupyter notebook.
