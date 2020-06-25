@@ -21,14 +21,13 @@ parser = argparse.ArgumentParser(description='Read the data from a Tombo per-rea
 parser.add_argument('READPATH', help='path to the per-read'
 		+ ' statistics file')
 parser.add_argument('WRITEPATH', help='path to the file where the CSV results will be written')
-parser.add_argument('-p', '--progress', help='show percent progress while running',
+parser.add_argument('-p', '--progress', help='give updates as the program runs',
 		action='store_true')
 parser.add_argument('-o', '--overwrite',
 		help='overwrite the file at WRITEPATH if it already exists', action='store_true')
 args = parser.parse_args()
 
 print('This script will unpack HDF5 file {} into a CSV file and store the result at {}.'.format(args.READPATH, args.WRITEPATH))
-if args.progress: print('This script will show progress as it transforms the data.')
 if args.overwrite: print('This script will overwrite the CSV file at {} if it already exists.'.format(args.WRITEPATH))
 
 
@@ -92,7 +91,8 @@ refer to the "true" read ids.
 
 ### Reading the HDF5 file ###
 
-print('Reading {}...'.format(args.READPATH))
+if args.progress:
+    print('Reading {}...'.format(args.READPATH))
 
 prs_path = args.READPATH
 
@@ -146,9 +146,8 @@ chunks. Each chunk is inserted wholesale into the table. This is much faster tha
 from bs_rec_array because the number of chunks equals the number of reads, which is hundreds of
 times smaller than the number of entries in bs_rec_array.'''
 
-print('Sorting all records from the HDF5 file')
-
-print('Converting per-read statistics data into a table... (no longer slow!)')
+if args.progress:
+    print('Converting per-read statistics data into a table... (no longer slow!)')
 
 number_of_records = bs_rec_array.shape[0]
 indices_preceeding_discontinuities = np.where((np.diff(bs_rec_array['read_id']) != 0)
@@ -172,7 +171,8 @@ for st, sp in zip(slice_boundaries, slice_boundaries[1:]):
 
 ### Write data ###
 
-print('Writing data to CSV file...')
+if args.progress:
+    print('Writing data to CSV file...')
 
 # TODO: Make read_id_number_col and read_id_value_col and attach them to table (store in new var)
 #read_id_number_col = np.asarray([rin
