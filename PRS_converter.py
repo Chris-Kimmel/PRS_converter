@@ -12,6 +12,8 @@ import sys
 import h5py
 import argparse
 
+# major_version = sys.version_info.major # major_version equals 2 or 3
+
 ### Argparse ###
 
 parser = argparse.ArgumentParser(description='Read the data from a Tombo per-read statistics'
@@ -48,13 +50,15 @@ if os.path.exists(args.WRITEPATH):
         sys.exit()
     if not os.access(args.WRITEPATH, os.W_OK):
         print('Error: The file {} is not writable with your permissions.'.format(args.WRITEPATH))
+        sys.exit()
     if args.overwrite:
         print('Deleting file {}...'.format(args.WRITEPATH))
         os.remove(args.WRITEPATH)
 else:
-    dirpath = os.path.split(args.WRITEPATH)[0]
+    dirpath = os.path.split(os.path.abspath(args.WRITEPATH))[0]
     if not os.access(dirpath, os.W_OK):
         print('Error: Cannot create files in directory {} with your permissions.'.format(dirpath))
+        sys.exit()
 
 # TODO: Assert we have write permissions and read permissions
 
@@ -117,7 +121,7 @@ print('Writing data to CSV file...')
 
 assert len(table) > 0, 'Trying to write a table with no entries'
 
-with open(args.WRITEPATH, 'wb') as fh:
+with open(args.WRITEPATH, 'w') as fh:
     
     header_entries = map(str, ['read_id'] + pos_tuple)
     header = ','.join(header_entries) + '\n'
