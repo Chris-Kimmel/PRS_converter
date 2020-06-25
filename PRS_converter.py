@@ -129,6 +129,7 @@ That's what pos_to_col_index and rin_to_row_index are for.
 pos_to_col_index = {pos: index for index, pos in enumerate(pos_tuple)}
 rin_to_row_index = {read_id_number: index for index, read_id_number in enumerate(rin_tuple)}
 
+
 ### Process the data into table form ###
 
 print('Converting per-read statistics data into a table... (This is the slow step.)')
@@ -157,18 +158,26 @@ print('Writing data to CSV file...')
 # TODO: Make read_id_number_col and read_id_value_col and attach them to table (store in new var)
 #read_id_number_col = np.asarray([rin
 
+def rin_to_riv(rin):
+    '''Given a read_id number, return the corresponding read_id_value
+
+    If it turns out that the read_ids database is significant, this whole script might be fixable
+    by fixing just this function.
+    '''
+    return(riv_array[rin])
+
 assert len(table) > 0, 'Trying to write a table with no entries'
 
 with open(args.WRITEPATH, 'w') as fh:
     
     # TODO: Add read_id_value to the header
-    header_entries = map(str, ['read_id_number'] + pos_tuple)
+    header_entries = map(str, ['read_id'] + ['read_id_number'] + pos_tuple)
     header = ','.join(header_entries) + '\n'
     fh.write(header)
     
     # TODO: Print rows from the table that has the rin and riv columns
-    for i, row in enumerate(table):
-        row_entries = map(str, [rin_tuple[i]] + list(row))
+    for i, (rin, row) in enumerate(zip(rin_tuple, table)):
+        row_entries = map(str, [rin_to_riv(rin), rin] + list(row))
         row = ','.join(row_entries)+'\n'
         fh.write(row)
 
