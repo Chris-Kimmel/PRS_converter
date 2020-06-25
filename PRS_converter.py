@@ -136,44 +136,38 @@ in bs_rec_array, and insert the stat value into table at the row corresponding t
 and the column corresponding to pos. The naive approach is to iterate through all rows
 in bs_rec_array and insert the values one at a time, but this code's approach is much faster.
   
-If we started at the top row of bs_rec_array_sorted and walked down, one row at a time, we would
-see that the read_id field of bs_rec_array_sorted is mostly constant, only changing every
-several-hundred steps. The pos field of bs_rec_array is also very predictable: because of the
-sorting, it usually increments steadily from one row to the next. This code starts by finding the
+If we started at the top row of bs_rec_array and walked down, one row at a time, we would
+see that the read_id field of bs_rec_array is mostly constant, only changing every
+several-hundred steps. The pos field of bs_rec_array is also very predictable:
+it usually increments steadily from one row to the next. This code starts by finding the
 locations of the discontinuities, where read_id changes or where pos does something other than
-increment, and then it uses these locations to slice bs_rec_array_sorted into very predictable
+increment, and then it uses these locations to slice bs_rec_array into very predictable
 chunks. Each chunk is inserted wholesale into the table. This is much faster than reading records
 from bs_rec_array because the number of chunks equals the number of reads, which is hundreds of
 times smaller than the number of entries in bs_rec_array.'''
 
 print('Sorting all records from the HDF5 file')
 
-# Sort bs_rec_array. Maybe try sorting primarily by 'pos'. That might help us fill the table faster below.
-# This step took me 20 seconds on a bs_rec_array with 28 million entries (Owens cluster, 1 node, 28 cores)
-# TODO: Investigate whether we really need to sort bs_rec_array. It's pretty sorted already.
-bs_rec_array_sorted = bs_rec_array.copy()
-bs_rec_array_sorted.sort(order=['read_id','pos'], kind='mergesort')
-
 print('Converting per-read statistics data into a table... (no longer slow!)')
 
-number_of_records = bs_rec_array_sorted.shape[0]
-indices_preceeding_discontinuities = np.where((np.diff(bs_rec_array_sorted['read_id']) != 0)
-                                              | (np.diff(bs_rec_array_sorted['pos']) != 1)
+number_of_records = bs_rec_array.shape[0]
+indices_preceeding_discontinuities = np.where((np.diff(bs_rec_array['read_id']) != 0)
+                                              | (np.diff(bs_rec_array['pos']) != 1)
                                              )[0]
 indices_following_discontinuities = indices_preceeding_discontinuities + 1
 slice_boundaries = np.concatenate(([0], indices_following_discontinuities, [number_of_records]))
 
 for st, sp in zip(slice_boundaries, slice_boundaries[1:]):
-    rin = bs_rec_array_sorted['read_id'][st]
+    rin = bs_rec_array['read_id'][st]
     row_index = rin_to_row_index[rin]
 
-    low_pos = bs_rec_array_sorted['pos'][st]
-    high_pos = bs_rec_array_sorted['pos'][sp-1] # "-1" because sp is the first index of the next slice
+    low_pos = bs_rec_array['pos'][st]
+    high_pos = bs_rec_array['pos'][sp-1] # "-1" because sp is the first index of the next slice
     low_col_index = pos_to_col_index[low_pos]
     high_col_index = pos_to_col_index[high_pos]
     assert low_col_index < high_col_index
 
-    table[row_index, low_col_index:(high_col_index+1)] = bs_rec_array_sorted['stat'][st:sp]
+    table[row_index, low_col_index:(high_col_index+1)] = bs_rec_array['stat'][st:sp]
 
 
 ### Write data ###
