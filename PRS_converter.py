@@ -132,12 +132,14 @@ rin_to_row_index = {read_id_number: index for index, read_id_number in enumerate
 
 ### Process the data into table form ###
 
-print('Converting per-read statistics data into a table... (This is the slow step.)')
+print('Sorting all records from the HDF5 file')
 
 # Sort bs_rec_array. Maybe try sorting primarily by 'pos'. That might help us fill the table faster below.
 # This step took me 20 seconds on a bs_rec_array with 28 million entries (Owens cluster, 1 node, 28 cores)
 bs_rec_array_sorted = bs_rec_array.copy()
 bs_rec_array_sorted.sort(order=['read_id','pos'], kind='mergesort')
+
+print('Converting per-read statistics data into a table... (This is the slow step.)')
 
 # On a 28-core CPU in the Owens cluster this loop took a little over 3 minutes on a rec_array with 28 million entries:
 num_checkpoints = 20
