@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # This is a command line tool to transform a Tombo per-read statistics file into a CSV file
 
 # TODO: Implement --progress option
