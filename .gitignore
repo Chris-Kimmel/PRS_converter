@@ -2,3 +2,4 @@
 *.csv
 *.tombo.per_read_stats
 .ipynb_checkpoints/*
+*.swp
