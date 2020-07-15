@@ -99,9 +99,18 @@ prs_path = args.READPATH
 with h5py.File(prs_path, 'r') as hdf5file:
     block_stats = hdf5file['Statistic_Blocks']['Block_0']['block_stats'] 
     read_ids = hdf5file['Statistic_Blocks']['Block_0']['read_ids']
+    read_id_vals = hdf5file['Statistic_Blocks']['Block_0']['read_id_vals']
+
     
     bs_struct_array = np.asarray(block_stats)
     riv_array = np.asarray(read_ids)
+    rin_to_riv_array = np.asarray(read_id_vals)
+    # Note:
+    # Don't get riv and read_id_vals mixed up. These two variables contain different information.
+    # riv_array contains the actual "read ID values".
+    # riv_array does NOT correspond to the read_id_vals dataset in the original hdf5 file
+    # See the function rin_to_riv in this code
+
 
 bs_rec_array = np.rec.array(bs_struct_array)
 
@@ -179,11 +188,8 @@ if args.progress:
 
 def rin_to_riv(rin):
     '''Given a read_id number, return the corresponding read_id_value
-
-    If it turns out that the read_ids database is significant, this whole script might be fixable
-    by fixing just this function.
     '''
-    return(riv_array[rin])
+    return(riv_array[rin_to_riv_array[rin]])
 
 assert len(table) > 0, 'Trying to write a table with no entries'
 
